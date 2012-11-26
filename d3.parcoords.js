@@ -51,6 +51,7 @@ d3.parcoords = function(config) {
         shadows: false,
         debug: false
       },
+      filter = null,
       xscale = d3.scale.ordinal(),
       yscale = {},
       dragging = {},
@@ -126,6 +127,10 @@ d3.parcoords = function(config) {
     pc.dimensions(d3.parcoords.quantitative(__.data));
     return this;
   };
+
+  pc.setFilter = function(f) {
+    __.filter = f;
+  }
 
   var rqueue = d3.renderQueue(path_foreground)
     .rate(50)
@@ -435,12 +440,19 @@ d3.parcoords = function(config) {
     return v == null ? xscale(d) : v;
   }
 
+  function user_filter(d) {
+    if (__.filter)
+      return __.filter(d);
+    else
+      return true;
+  }
+
   // data within extents
   function selected() {
     var actives = __.dimensions.filter(is_brushed),
         extents = actives.map(function(p) { return yscale[p].brush.extent(); });
 
-    return __.data
+    return __.data.filter(user_filter)
       .filter(function(d) {
         return actives.every(function(p, dimension) {
           return extents[dimension][0] <= d[p] && d[p] <= extents[dimension][1];
